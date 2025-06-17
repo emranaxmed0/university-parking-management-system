@@ -24,11 +24,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $error = "Invalid username or password.";
 }
 ?>
-<!-- HTML form -->
+
+<link rel="stylesheet" href="../css/login.css">
 <form method="post">
     <h2>Student Login</h2>
     <input type="text" name="username" placeholder="Username" required><br>
     <input type="password" name="password" placeholder="Password" required><br>
     <button type="submit">Login</button>
-    <?php if (isset($error)) echo "<p>$error</p>"; ?>
+    <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
+    <p>Don't have an account? <a href="../signup/student-signup.php">Sign up here</a></p>
 </form>

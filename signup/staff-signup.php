@@ -2,17 +2,17 @@
 require_once "../includes/db_connect.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $fullname = $_POST["fullname"];
     $username = $_POST["username"];
     $email = $_POST["email"];
-    $phone = $_POST["phone"];
     $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
 
-    $query = "INSERT INTO Staff (username, password, email, phone) VALUES (?, ?, ?, ?)";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("ssss", $username, $password, $email, $phone);
+    $sql = "INSERT INTO Staff (fullname, username, email, password) VALUES (?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssss", $fullname, $username, $email, $password);
 
     if ($stmt->execute()) {
-        header("Location: ../login/staff_login.php");
+        header("Location: ../login/staff-login.php");
         exit();
     } else {
         $error = "Signup failed. Please try again.";
@@ -21,19 +21,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Staff Signup</title>
+    <link rel="stylesheet" href="../css/signup.css">
 </head>
 <body>
-    <form method="post">
-        <h2>Staff Signup</h2>
-        <input type="text" name="username" placeholder="Username" required><br>
-        <input type="email" name="email" placeholder="Email" required><br>
-        <input type="text" name="phone" placeholder="Phone" required><br>
-        <input type="password" name="password" placeholder="Password" required><br>
-        <button type="submit">Sign Up</button>
-        <?php if (isset($error)) echo "<p>$error</p>"; ?>
-    </form>
+    <div class="form-container">
+        <form method="POST">
+            <h2>Staff Sign Up</h2>
+            <input type="text" name="fullname" placeholder="Full Name" required><br>
+            <input type="text" name="username" placeholder="Username" required><br>
+            <input type="email" name="email" placeholder="Email" required><br>
+            <input type="password" name="password" placeholder="Password" required><br>
+            <button type="submit">Sign Up</button>
+            <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
+            <p>Already have an account? <a href="../login/staff-login.php">Log in here</a></p>
+        </form>
+    </div>
 </body>
 </html>

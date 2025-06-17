@@ -66,7 +66,12 @@ nav a:hover {
     background-color: #222;
     min-width: 160px;
     box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
-    z-index: 1;
+    z-index: 1001;
+    right: 0; 
+    left: auto;
+    overflow-y: auto;
+    max-height: 300px; 
+    
 }
 
 .dropdown-content a {
@@ -82,4 +87,13 @@ nav a:hover {
 
 .dropdown:hover .dropdown-content {
     display: block;
+}
+@media (max-width: 400px) {
+    .dropdown-content {
+        position: fixed;
+        right: 10px;
+        top: 60px; /* Adjust if nav height is different */
+        width: 90%;
+        left: auto;
+    }
 }

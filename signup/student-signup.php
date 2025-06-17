@@ -3,29 +3,28 @@ require_once "../includes/db_connect.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST["username"];
-    $email = $_POST["email"];
-    $phone = $_POST["phone"];
     $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
+    $email = $_POST["email"];
 
-    $query = "INSERT INTO Student (username, password, email, phone) VALUES (?, ?, ?, ?)";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("ssss", $username, $password, $email, $phone);
+    $stmt = $conn->prepare("INSERT INTO Student (username, password, email) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $username, $password, $email);
 
     if ($stmt->execute()) {
-        header("Location: ../login/student_login.php");
+        header("Location: ../login/student-login.php");
         exit();
     } else {
-        $error = "Signup failed.";
+        $error = "Signup failed. Try a different username.";
     }
 }
 ?>
-<!-- HTML form -->
+
+<link rel="stylesheet" href="../css/signup.css">
 <form method="post">
-    <h2>Student Signup</h2>
+    <h2>Student Sign Up</h2>
     <input type="text" name="username" placeholder="Username" required><br>
     <input type="email" name="email" placeholder="Email" required><br>
-    <input type="text" name="phone" placeholder="Phone" required><br>
     <input type="password" name="password" placeholder="Password" required><br>
     <button type="submit">Sign Up</button>
-    <?php if (isset($error)) echo "<p>$error</p>"; ?>
+    <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
+    <p>Already have an account? <a href="../login/student-login.php">Login here</a></p>
 </form>
