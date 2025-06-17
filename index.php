@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>University Parking Management System</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
+ 
 </head>
 <body>
 
@@ -14,21 +15,9 @@
                 <div class="logo">🚗</div>
                 <h1 class="site-title">University Parking Management System</h1>
             </div>
-            <nav class="navigation">
-                <div class="nav-left">
-                    <a href="/" class="nav-link">HOME</a>
-                    <a href="/check-availability.php" class="nav-link">Check Availability</a>
-                    <a href="/admin-logs.php" class="nav-link">Admin Logs</a>
-                </div>
-                <div class="nav-right">
-                    <a href="/login.php" class="nav-link">Log In</a>
-                    <a href="/logout.php" class="nav-link">Log Out</a>
-                    <a href="/signup.php" class="nav-button">Sign Up</a>
-                </div>
-            </nav>
         </div>
     </header>
-
+  <?php include 'includes/nav.php'; ?>
     <main class="main-content">
         <section class="hero-section">
             <h2 class="hero-heading">Smart Parking Solutions for Campus</h2>
@@ -58,20 +47,13 @@
             <div class="feature-card">
                 <div class="icon-circle">👥</div>
                 <h3 class="feature-title">User-Friendly</h3>
-                <p>Designed for students, faculty, and staff of all tech levels.</p>
+                <p>Designed for students, staff and visitors.</p>
             </div>
         </section>
 
     </main>
 
-    <footer class="main-footer">
-        <p>© 2025 University Parking Management System. All rights reserved.</p>
-        <div class="footer-links">
-            <a href="/privacy-policy.php">Privacy Policy</a> |
-            <a href="/terms-of-service.php">Terms of Service</a> |
-            <a href="/contact-us.php">Contact Us</a>
-        </div>
-    </footer>
+ <?php include 'includes/footer.php'; ?>
 </body>
 </html>
 
