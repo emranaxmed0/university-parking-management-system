@@ -17,7 +17,7 @@
             </div>
         </div>
     </header>
-  <?php include 'includes/nav.php'; ?>
+  <?php include 'templates/nav.php'; ?>
     <main class="main-content">
         <section class="hero-section">
             <h2 class="hero-heading">Smart Parking Solutions for Campus</h2>
@@ -53,7 +53,7 @@
 
     </main>
 
- <?php include 'includes/footer.php'; ?>
+ <?php include 'templates/footer.php'; ?>
 </body>
 </html>
 
