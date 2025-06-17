@@ -1,0 +1,47 @@
+.main-nav {
+    background-color: #1a1a1a;
+    padding: 0.75rem 2rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.nav-links,
+.auth-links {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-links li a,
+.auth-links li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.nav-links li a:hover,
+.auth-links li a:hover {
+    background-color: #ff7f27;
+    color: #000;
+}
+
+.signup-btn {
+    background-color: #ff7f27;
+    color: #000;
+    font-weight: bold;
+}
