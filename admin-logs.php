@@ -2,13 +2,31 @@
 session_start();
 require_once "includes/db_connect.php";
 
-$username = isset($_SESSION['username']) ? $_SESSION['username'] : 'Admin';
+// Handle delete zone
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_zone_id"])) {
+    $zoneId = intval($_POST["delete_zone_id"]);
+    $stmt = $conn->prepare("DELETE FROM Zone WHERE zoneID = ?");
+    $stmt->bind_param("i", $zoneId);
+    $stmt->execute();
+    header("Location: admin.php");
+    exit();
+}
 
-// Fetch all zones
+// Handle delete parking space
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_space_id"])) {
+    $spaceId = intval($_POST["delete_space_id"]);
+    $stmt = $conn->prepare("DELETE FROM ParkingSpace WHERE spaceID = ?");
+    $stmt->bind_param("i", $spaceId);
+    $stmt->execute();
+    header("Location: admin.php");
+    exit();
+}
+
+// Fetch zones
 $zoneQuery = "SELECT * FROM Zone";
 $zones = $conn->query($zoneQuery);
 
-// Fetch all parking spaces with zone info
+// Fetch parking spaces
 $spaceQuery = "SELECT ps.spaceID, ps.status, ps.type, z.zoneName 
                FROM ParkingSpace ps 
                JOIN Zone z ON ps.zoneID = z.zoneID";
@@ -25,20 +43,18 @@ $spaces = $conn->query($spaceQuery);
 <body>
 
 <header class="admin-header">
-    <?php include 'templates/nav.php'; ?>
     <h1>Admin Dashboard</h1>
-    <p>Welcome, <?= htmlspecialchars($username) ?></p>
+    <p>Welcome, <?= isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin' ?></p>
 </header>
 
 <main class="admin-container">
 
-    <!-- Zone Management Section -->
+    <!-- Zone Management -->
     <section class="admin-section">
         <h2>Zones</h2>
         <div class="action-buttons">
             <a href="zone_add.php" class="btn">➕ Add Zone</a>
             <a href="zone_update.php" class="btn">✏️ Update Zone</a>
-            <a href="zone_delete.php" class="btn">🗑️ Remove Zone</a>
         </div>
         <table>
             <thead>
@@ -46,27 +62,33 @@ $spaces = $conn->query($spaceQuery);
                     <th>Zone Name</th>
                     <th>Capacity</th>
                     <th>Available Space</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                <?php while ($row = $zones->fetch_assoc()): ?>
+                <?php while ($zone = $zones->fetch_assoc()): ?>
                     <tr>
-                        <td><?= htmlspecialchars($row['zoneName']) ?></td>
-                        <td><?= htmlspecialchars($row['capacity']) ?></td>
-                        <td><?= htmlspecialchars($row['availableSpace']) ?></td>
+                        <td><?= htmlspecialchars($zone['zoneName']) ?></td>
+                        <td><?= htmlspecialchars($zone['capacity']) ?></td>
+                        <td><?= htmlspecialchars($zone['availableSpace']) ?></td>
+                        <td>
+                            <form method="post" onsubmit="return confirm('Are you sure you want to delete this zone?');" style="display:inline;">
+                                <input type="hidden" name="delete_zone_id" value="<?= $zone['zoneID'] ?>">
+                                <button type="submit" class="btn danger-btn">🗑️ Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
     </section>
 
-    <!-- Parking Space Management Section -->
+    <!-- Parking Space Management -->
     <section class="admin-section">
         <h2>Parking Spaces</h2>
         <div class="action-buttons">
             <a href="space_add.php" class="btn">➕ Add Space</a>
             <a href="space_update.php" class="btn">✏️ Update Space</a>
-            <a href="space_delete.php" class="btn">🗑️ Remove Space</a>
         </div>
         <table>
             <thead>
@@ -75,22 +97,29 @@ $spaces = $conn->query($spaceQuery);
                     <th>Zone</th>
                     <th>Status</th>
                     <th>Type</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                <?php while ($row = $spaces->fetch_assoc()): ?>
+                <?php while ($space = $spaces->fetch_assoc()): ?>
                     <tr>
-                        <td><?= htmlspecialchars($row['spaceID']) ?></td>
-                        <td><?= htmlspecialchars($row['zoneName']) ?></td>
-                        <td><?= htmlspecialchars($row['status']) ?></td>
-                        <td><?= htmlspecialchars($row['type']) ?></td>
+                        <td><?= htmlspecialchars($space['spaceID']) ?></td>
+                        <td><?= htmlspecialchars($space['zoneName']) ?></td>
+                        <td><?= htmlspecialchars($space['status']) ?></td>
+                        <td><?= htmlspecialchars($space['type']) ?></td>
+                        <td>
+                            <form method="post" onsubmit="return confirm('Delete this parking space?');" style="display:inline;">
+                                <input type="hidden" name="delete_space_id" value="<?= $space['spaceID'] ?>">
+                                <button type="submit" class="btn danger-btn">🗑️ Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
     </section>
 
-    <!-- Feedback Viewer -->
+    <!-- Feedback -->
     <section class="admin-section">
         <h2>User Feedback</h2>
         <a href="view_feedback.php" class="btn feedback-btn">💬 View Feedback</a>
@@ -98,6 +127,5 @@ $spaces = $conn->query($spaceQuery);
 
 </main>
 
-<?php include 'templates/footer.php'; ?>
 </body>
 </html>
