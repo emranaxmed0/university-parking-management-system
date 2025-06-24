@@ -2,8 +2,8 @@
 <nav>
     <div class="topnav">
         <a href="./">Home</a>
-        <a href="/check-availability.php">Check Availability</a>
-        <a href="/admin-logs.php">Admin Logs</a>
+        <a href="check-availability.php">Check Availability</a>
+        <a href="admin-logs.php">Admin Logs</a>
     </div>    
     <div class="topnav-right">
             <div class="dropdown">
