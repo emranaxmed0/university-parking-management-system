@@ -54,7 +54,6 @@ $spaces = $conn->query($spaceQuery);
         <h2>Zones</h2>
         <div class="action-buttons">
             <a href="zone_add.php" class="btn">➕ Add Zone</a>
-            <a href="zone_update.php" class="btn">✏️ Update Zone</a>
         </div>
         <table>
             <thead>
@@ -76,6 +75,7 @@ $spaces = $conn->query($spaceQuery);
                                 <input type="hidden" name="delete_zone_id" value="<?= $zone['zoneID'] ?>">
                                 <button type="submit" class="btn danger-btn">🗑️ Delete</button>
                             </form>
+                            <a href="zone_update.php?id=<?= $zone['zoneID'] ?>" class="btn update-btn">✏️ Update</a>
                         </td>
                     </tr>
                 <?php endwhile; ?>
