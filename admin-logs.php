@@ -43,6 +43,7 @@ $spaces = $conn->query($spaceQuery);
 <body>
 
 <header class="admin-header">
+    <?php include 'templates/nav.php'; ?>
     <h1>Admin Dashboard</h1>
     <p>Welcome, <?= isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin' ?></p>
 </header>
@@ -127,5 +128,6 @@ $spaces = $conn->query($spaceQuery);
 
 </main>
 
+ <?php include 'templates/footer.php'; ?>
 </body>
 </html>
