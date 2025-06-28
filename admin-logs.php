@@ -90,34 +90,9 @@ $spaces = $conn->query($spaceQuery);
         <div class="action-buttons">
             <a href="space_add.php" class="btn">➕ Add Space</a>
             <a href="space_update.php" class="btn">✏️ Update Space</a>
+            <a href="view_space.php" class="btn">📋 View Spaces</a>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Space ID</th>
-                    <th>Zone</th>
-                    <th>Status</th>
-                    <th>Type</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php while ($space = $spaces->fetch_assoc()): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($space['spaceID']) ?></td>
-                        <td><?= htmlspecialchars($space['zoneName']) ?></td>
-                        <td><?= htmlspecialchars($space['status']) ?></td>
-                        <td><?= htmlspecialchars($space['type']) ?></td>
-                        <td>
-                            <form method="post" onsubmit="return confirm('Delete this parking space?');" style="display:inline;">
-                                <input type="hidden" name="delete_space_id" value="<?= $space['spaceID'] ?>">
-                                <button type="submit" class="btn danger-btn">🗑️ Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
+
     </section>
 
     <!-- Feedback -->
