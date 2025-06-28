@@ -22,10 +22,18 @@
         <section class="hero-section">
             <h2 class="hero-heading">Smart Parking Solutions for Campus</h2>
             <p class="hero-text">Efficiently manage your university parking with our comprehensive system. Find available spots and streamline campus mobility.</p>
-            <div class="button-group">
-                <a href="/check-availability.php" class="primary-button">Check Parking Availability</a>
-                <a href="/signup.php" class="secondary-button">Get Started Today</a>
-            </div>
+           <div class="button-group">
+    <a href="/check-availability.php" class="primary-button">Check Parking Availability</a>
+    <div class="dropdown">
+    <a class="secondary-button dropdown-toggle" href="#">Get Started Today ▾</a>
+         <div class="dropdown-content">
+             <a href="signup/staff-signup.php">Staff Signup</a>
+             <a href="signup/student-signup.php">Student Signup</a>
+             <a href="signup/visitor-signup.php">Visitor Signup</a>
+         </div>
+    </div>
+
+
         </section>
 
         <section class="features-grid">
