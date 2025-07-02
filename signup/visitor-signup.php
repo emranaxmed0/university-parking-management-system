@@ -6,8 +6,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
     $email = $_POST["email"];
 
-    $stmt = $conn->prepare("INSERT INTO Visitor (username, password, email) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $username, $password, $email);
+    $stmt = $conn->prepare("INSERT INTO Visitor (username, email, password) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $username, $email, $password);
+
 
     if ($stmt->execute()) {
         header("Location: ../login/visitor-login.php");
