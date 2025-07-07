@@ -18,6 +18,11 @@ $zoneStmt->bind_param("s", $role);
 $zoneStmt->execute();
 $zoneResult = $zoneStmt->get_result();
 $zone = $zoneResult->fetch_assoc();
+$availableStmt = $conn->prepare("SELECT COUNT(*) AS availableCount FROM ParkingSpace WHERE zoneID = ? AND status = 'available'");
+$availableStmt->bind_param("i", $zone["zoneID"]);
+$availableStmt->execute();
+$availableResult = $availableStmt->get_result();
+$availableCount = $availableResult->fetch_assoc()["availableCount"];
 
 if (!$zone) {
     die("No zone assigned to this role.");
@@ -101,7 +106,7 @@ $spaces = $spaceStmt->get_result();
 <div class="dashboard-container">
     <h2>Welcome, Student</h2>
 
-    <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $zone["availableSpace"] ?> / <?= $zone["capacity"] ?></h3>
+   <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $availableCount ?> / <?= $zone["capacity"] ?></h3>
 
     <?php if (!empty($error)): ?>
         <div class="error-message" style="color: red; text-align: center; font-weight: bold;">
