@@ -3,64 +3,53 @@ require_once "includes/db_connect.php";
 
 $error = "";
 
-try {
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_space_id"])) {
-        $conn->begin_transaction();
 
-        $spaceId = intval($_POST["delete_space_id"]);
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_space_id"])) {
+    $spaceId = intval($_POST["delete_space_id"]);
 
-        $stmt = $conn->prepare("SELECT zoneID, status FROM ParkingSpace WHERE spaceID = ?");
-        $stmt->bind_param("i", $spaceId);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    $stmt = $conn->prepare("SELECT zoneID, status FROM ParkingSpace WHERE spaceID = ?");
+    $stmt->bind_param("i", $spaceId);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-        if ($space = $result->fetch_assoc()) {
-            $zoneID = $space['zoneID'];
-            $status = $space['status'];
+    if ($space = $result->fetch_assoc()) {
+        $zoneID = $space['zoneID'];
+        $status = $space['status'];
 
-            $deleteStmt = $conn->prepare("DELETE FROM ParkingSpace WHERE spaceID = ?");
-            $deleteStmt->bind_param("i", $spaceId);
-            $deleteStmt->execute();
+        $deleteStmt = $conn->prepare("DELETE FROM ParkingSpace WHERE spaceID = ?");
+        $deleteStmt->bind_param("i", $spaceId);
+        $deleteStmt->execute();
 
-            $conn->query("UPDATE Zone SET capacity = capacity - 1 WHERE zoneID = $zoneID");
+        $conn->query("UPDATE Zone SET capacity = capacity - 1 WHERE zoneID = $zoneID");
+        if ($status === 'available') {
+            $conn->query("UPDATE Zone SET availableSpace = availableSpace - 1 WHERE zoneID = $zoneID");
+        }
+    }
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["spaceID"]) && !isset($_POST["delete_space_id"])) {
+    $spaceID = intval($_POST["spaceID"]);
+    $zoneID = intval($_POST["zoneID"]);
+    $status = $_POST["status"];
+    $type = $_POST["type"];
+
+    if (!empty($spaceID) && !empty($zoneID) && in_array($status, ['available', 'occupied']) && !empty($type)) {
+        $stmt = $conn->prepare("INSERT INTO ParkingSpace (spaceID, zoneID, status, type) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("iiss", $spaceID, $zoneID, $status, $type);
+
+        if ($stmt->execute()) {
+            $conn->query("UPDATE Zone SET capacity = capacity + 1 WHERE zoneID = $zoneID");
             if ($status === 'available') {
-                $conn->query("UPDATE Zone SET availableSpace = availableSpace - 1 WHERE zoneID = $zoneID");
+                $conn->query("UPDATE Zone SET availableSpace = availableSpace + 1 WHERE zoneID = $zoneID");
             }
-        }
-
-        $conn->commit();
-    }
-
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["spaceID"]) && !isset($_POST["delete_space_id"])) {
-        $conn->begin_transaction();
-
-        $spaceID = intval($_POST["spaceID"]);
-        $zoneID = intval($_POST["zoneID"]);
-        $status = $_POST["status"];
-        $type = $_POST["type"];
-
-        if (!empty($spaceID) && !empty($zoneID) && in_array($status, ['available', 'occupied']) && !empty($type)) {
-            $stmt = $conn->prepare("INSERT INTO ParkingSpace (spaceID, zoneID, status, type) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("iiss", $spaceID, $zoneID, $status, $type);
-
-            if ($stmt->execute()) {
-                $conn->query("UPDATE Zone SET capacity = capacity + 1 WHERE zoneID = $zoneID");
-                if ($status === 'available') {
-                    $conn->query("UPDATE Zone SET availableSpace = availableSpace + 1 WHERE zoneID = $zoneID");
-                }
-                $conn->commit();
-                header("Location: space_add.php");
-                exit();
-            } else {
-                throw new Exception("Failed to add parking space: " . $conn->error);
-            }
+            header("Location: space_add.php");
+            exit();
         } else {
-            throw new Exception("Please fill all fields correctly.");
+            $error = "Failed to add parking space: " . $conn->error;
         }
+    } else {
+        $error = "Please fill all fields correctly.";
     }
-} catch (Exception $e) {
-    $conn->rollback();
-    $error = $e->getMessage();
 }
 
 $zonesResult = $conn->query("SELECT zoneID, zoneName FROM Zone");

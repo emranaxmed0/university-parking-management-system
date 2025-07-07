@@ -2,63 +2,35 @@
 session_start();
 require_once "includes/db_connect.php";
 
-$error = "";
-
-try {
-    $conn->begin_transaction();
-
-    // Handle delete zone
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_zone_id"])) {
-        $zoneId = intval($_POST["delete_zone_id"]);
-        $stmt = $conn->prepare("DELETE FROM Zone WHERE zoneID = ?");
-        if (!$stmt) {
-            throw new Exception("Failed to prepare delete zone statement: " . $conn->error);
-        }
-        $stmt->bind_param("i", $zoneId);
-        if (!$stmt->execute()) {
-            throw new Exception("Failed to execute delete zone: " . $stmt->error);
-        }
-        $conn->commit();
-        header("Location: admin.php");
-        exit();
-    }
-
-    // Handle delete parking space
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_space_id"])) {
-        $spaceId = intval($_POST["delete_space_id"]);
-        $stmt = $conn->prepare("DELETE FROM ParkingSpace WHERE spaceID = ?");
-        if (!$stmt) {
-            throw new Exception("Failed to prepare delete space statement: " . $conn->error);
-        }
-        $stmt->bind_param("i", $spaceId);
-        if (!$stmt->execute()) {
-            throw new Exception("Failed to execute delete space: " . $stmt->error);
-        }
-        $conn->commit();
-        header("Location: admin.php");
-        exit();
-    }
-
-    // Fetch zones
-    $zoneQuery = "SELECT * FROM Zone";
-    $zones = $conn->query($zoneQuery);
-    if (!$zones) {
-        throw new Exception("Failed to fetch zones: " . $conn->error);
-    }
-
-    // Fetch parking spaces
-    $spaceQuery = "SELECT ps.spaceID, ps.status, ps.type, z.zoneName FROM ParkingSpace ps JOIN Zone z ON ps.zoneID = z.zoneID";
-    $spaces = $conn->query($spaceQuery);
-    if (!$spaces) {
-        throw new Exception("Failed to fetch spaces: " . $conn->error);
-    }
-
-    $conn->commit();
-} catch (Exception $e) {
-    $conn->rollback();
-    error_log($e->getMessage());
-    $error = "An error occurred. Please try again later.";
+// Handle delete zone
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_zone_id"])) {
+    $zoneId = intval($_POST["delete_zone_id"]);
+    $stmt = $conn->prepare("DELETE FROM Zone WHERE zoneID = ?");
+    $stmt->bind_param("i", $zoneId);
+    $stmt->execute();
+    header("Location: admin.php");
+    exit();
 }
+
+// Handle delete parking space
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_space_id"])) {
+    $spaceId = intval($_POST["delete_space_id"]);
+    $stmt = $conn->prepare("DELETE FROM ParkingSpace WHERE spaceID = ?");
+    $stmt->bind_param("i", $spaceId);
+    $stmt->execute();
+    header("Location: admin.php");
+    exit();
+}
+
+// Fetch zones
+$zoneQuery = "SELECT * FROM Zone";
+$zones = $conn->query($zoneQuery);
+
+// Fetch parking spaces
+$spaceQuery = "SELECT ps.spaceID, ps.status, ps.type, z.zoneName 
+               FROM ParkingSpace ps 
+               JOIN Zone z ON ps.zoneID = z.zoneID";
+$spaces = $conn->query($spaceQuery);
 ?>
 
 <!DOCTYPE html>
@@ -77,10 +49,6 @@ try {
 </header>
 
 <main class="admin-container">
-
-    <?php if (!empty($error)): ?>
-        <p style="color:red; text-align:center; font-weight:bold;"><?= htmlspecialchars($error) ?></p>
-    <?php endif; ?>
 
     <!-- Zone Management -->
     <section class="admin-section">

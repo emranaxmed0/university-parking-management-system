@@ -1,28 +1,11 @@
-<?php
-session_start();
-
-// Optional redirect if user is already logged in
-if (isset($_SESSION["user_id"])) {
-    switch ($_SESSION["role"]) {
-        case 'student':
-            header("Location: student_dashboard.php");
-            exit();
-        case 'staff':
-            header("Location: staff_dashboard.php");
-            exit();
-        case 'visitor':
-            header("Location: visitor_dashboard.php");
-            exit();
-    }
-}
-?>
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>University Parking Management System</title>
     <link rel="stylesheet" href="css/style.css">
+ 
 </head>
 <body>
 
@@ -34,24 +17,23 @@ if (isset($_SESSION["user_id"])) {
             </div>
         </div>
     </header>
-
-    <?php include 'templates/nav.php'; ?>
-
+  <?php include 'templates/nav.php'; ?>
     <main class="main-content">
         <section class="hero-section">
             <h2 class="hero-heading">Smart Parking Solutions for Campus</h2>
             <p class="hero-text">Efficiently manage your university parking with our comprehensive system. Find available spots and streamline campus mobility.</p>
-            <div class="button-group">
-                <a href="/check-availability.php" class="primary-button">Check Parking Availability</a>
-                <div class="dropdown">
-                    <a class="secondary-button dropdown-toggle" href="#">Get Started Today ▾</a>
-                    <div class="dropdown-content">
-                        <a href="signup/staff-signup.php">Staff Signup</a>
-                        <a href="signup/student-signup.php">Student Signup</a>
-                        <a href="signup/visitor-signup.php">Visitor Signup</a>
-                    </div>
-                </div>
-            </div>
+           <div class="button-group">
+    <a href="/check-availability.php" class="primary-button">Check Parking Availability</a>
+    <div class="dropdown">
+    <a class="secondary-button dropdown-toggle" href="#">Get Started Today ▾</a>
+         <div class="dropdown-content">
+             <a href="signup/staff-signup.php">Staff Signup</a>
+             <a href="signup/student-signup.php">Student Signup</a>
+             <a href="signup/visitor-signup.php">Visitor Signup</a>
+         </div>
+    </div>
+
+
         </section>
 
         <section class="features-grid">
@@ -76,8 +58,10 @@ if (isset($_SESSION["user_id"])) {
                 <p>Designed for students, staff and visitors.</p>
             </div>
         </section>
+
     </main>
 
-    <?php include 'templates/footer.php'; ?>
+ <?php include 'templates/footer.php'; ?>
 </body>
 </html>
+

@@ -3,45 +3,27 @@ require_once "includes/db_connect.php";
 
 $error = "";
 
-try {
-    if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $zoneID = intval($_POST["zoneID"]);
-        $zoneName = trim($_POST["zoneName"]);
-        $capacity = intval($_POST["capacity"]);
-        $role = $_POST["role"];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $zoneID = intval($_POST["zoneID"]);
+    $zoneName = trim($_POST["zoneName"]);
+    $capacity = intval($_POST["capacity"]);
+    $role = $_POST["role"];
 
-        if (!empty($zoneID) && !empty($zoneName) && $capacity >= 0 && in_array($role, ['student', 'staff', 'visitor'])) {
+    if (!empty($zoneID) && !empty($zoneName) && $capacity >= 0 && in_array($role, ['student', 'staff', 'visitor'])) {
+        $stmt = $conn->prepare("INSERT INTO Zone (zoneID, zoneName, capacity, role) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("isis", $zoneID, $zoneName, $capacity, $role);
 
-            //  Begin transaction for concurrency control
-            $conn->begin_transaction();
-
-            $stmt = $conn->prepare("INSERT INTO Zone (zoneID, zoneName, capacity, role) VALUES (?, ?, ?, ?)");
-            if (!$stmt) {
-                throw new Exception("Prepare failed: " . $conn->error); // Error handling
-            }
-
-            $stmt->bind_param("isis", $zoneID, $zoneName, $capacity, $role);
-
-            if ($stmt->execute()) {
-                $conn->commit(); //  Commit if successful
-                header("Location: admin-logs.php");
-                exit();
-            } else {
-                $conn->rollback(); // Rollback on failure
-                $error = "Failed to add zone: " . $stmt->error;
-            }
-
+        if ($stmt->execute()) {
+            header("Location: admin-logs.php");
+            exit();
         } else {
-            $error = "Please fill all fields correctly.";
+            $error = "Failed to add zone: " . $conn->error;
         }
+    } else {
+        $error = "Please fill all fields correctly.";
     }
-} catch (Exception $e) {
-    //  Catch any unexpected errors and rollback
-    $conn->rollback();
-    $error = "An error occurred: " . $e->getMessage();
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">

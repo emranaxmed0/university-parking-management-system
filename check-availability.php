@@ -1,8 +1,7 @@
 <?php
 session_start();
-require_once "includes/db_connect.php";
 
-// Redirect if already logged in
+
 if (isset($_SESSION["user_id"]) && isset($_SESSION["role"])) {
     switch ($_SESSION["role"]) {
         case 'student':
@@ -18,31 +17,6 @@ if (isset($_SESSION["user_id"]) && isset($_SESSION["role"])) {
             header("Location: logout.php");
             exit();
     }
-}
-
-$zones = [];
-
-try {
-    $conn->begin_transaction();
-
-    $stmt = $conn->prepare("SELECT zoneName, role, capacity, availableSpace FROM Zone");
-    if (!$stmt) {
-        throw new Exception("Prepare failed: " . $conn->error);
-    }
-
-    if (!$stmt->execute()) {
-        throw new Exception("Execute failed: " . $stmt->error);
-    }
-
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $zones[$row['role']] = $row;
-    }
-
-    $conn->commit();
-} catch (Exception $e) {
-    $conn->rollback();
-    error_log("Error fetching zones: " . $e->getMessage());
 }
 ?>
 
@@ -89,5 +63,4 @@ try {
 
 </body>
 </html>
-
 

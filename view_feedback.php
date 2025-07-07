@@ -2,24 +2,9 @@
 session_start();
 require_once "includes/db_connect.php";
 
-$error = "";
-$feedbacks = [];
-
-try {
-    $sql = "SELECT * FROM Feedback ORDER BY timestamp DESC";
-    $result = $conn->query($sql);
-
-    if (!$result) {
-        throw new Exception("Failed to fetch feedback: " . $conn->error);
-    }
-
-    while ($row = $result->fetch_assoc()) {
-        $feedbacks[] = $row;
-    }
-
-} catch (Exception $e) {
-    $error = $e->getMessage();
-}
+// Fetch feedback
+$sql = "SELECT * FROM Feedback ORDER BY timestamp DESC";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -84,13 +69,7 @@ try {
 <div class="feedback-container">
     <h2>User Feedback</h2>
 
-    <?php if ($error): ?>
-        <p style="color:red; text-align:center;"><?= htmlspecialchars($error) ?></p>
-
-    <?php elseif (empty($feedbacks)): ?>
-        <p style="text-align:center;">No feedback found.</p>
-
-    <?php else: ?>
+    <?php if ($result && $result->num_rows > 0): ?>
         <table>
             <thead>
                 <tr>
@@ -102,7 +81,7 @@ try {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($feedbacks as $row): ?>
+                <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
                         <td><?= htmlspecialchars($row['feedbackID']) ?></td>
                         <td><?= htmlspecialchars($row['userID']) ?></td>
@@ -110,9 +89,11 @@ try {
                         <td><?= htmlspecialchars($row['feedbackText']) ?></td>
                         <td><?= htmlspecialchars($row['timestamp']) ?></td>
                     </tr>
-                <?php endforeach; ?>
+                <?php endwhile; ?>
             </tbody>
         </table>
+    <?php else: ?>
+        <p style="text-align:center;">No feedback found.</p>
     <?php endif; ?>
 
     <a class="back-link" href="admin-logs.php">← Back to Admin Panel</a>
