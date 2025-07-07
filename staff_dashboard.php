@@ -132,7 +132,13 @@ $spaces = $spaceStmt->get_result();
             </div>
         <?php endwhile; ?>
     </div>
+    <section class="dashboard-section">
+        <h2>User Feedback</h2>
+        <a href="feedback.php" class="btn feedback-btn">💬 Feedback</a>
+    </section>
+
 </div>
+
 
 </body>
 </html>
