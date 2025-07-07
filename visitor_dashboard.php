@@ -2,7 +2,6 @@
 session_start();
 require_once "includes/db_connect.php";
 
-// Ensure user is logged in and is a student
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "visitor") {
     header("Location: login/visitor-login.php");
     exit();
@@ -11,96 +10,114 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "visitor") {
 $userID = $_SESSION["user_id"];
 $role = $_SESSION["role"];
 $error = "";
+$zone = null;
+$activeSession = null;
+$spaces = [];
 
-$zoneStmt = $conn->prepare("SELECT * FROM Zone WHERE role = ?");
-$zoneStmt->bind_param("s", $role);
-$zoneStmt->execute();
-$zoneResult = $zoneStmt->get_result();
-$zone = $zoneResult->fetch_assoc();
+try {
+    // Get zone for visitor
+    $zoneStmt = $conn->prepare("SELECT * FROM Zone WHERE role = ?");
+    if (!$zoneStmt) throw new Exception("Prepare failed: " . $conn->error);
+    $zoneStmt->bind_param("s", $role);
+    $zoneStmt->execute();
+    $zoneResult = $zoneStmt->get_result();
+    $zone = $zoneResult->fetch_assoc();
 
-if (!$zone) {
-    die("No zone assigned to this role.");
-}
-
-// Check for active session
-$activeStmt = $conn->prepare("SELECT * FROM Session WHERE userID = ? AND role = ? AND checkoutTime IS NULL");
-$activeStmt->bind_param("is", $userID, $role);
-$activeStmt->execute();
-$activeSession = $activeStmt->get_result()->fetch_assoc();
-
-// Handle check-in
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) {
-    if ($activeSession) {
-        $error = "You are already checked in. Please check out first.";
-    } else {
-        $spaceID = intval($_POST["checkin_space_id"]);
-
-        // Mark the space as occupied
-        $updateSpace = $conn->prepare("UPDATE ParkingSpace SET status = 'occupied' WHERE spaceID = ?");
-        $updateSpace->bind_param("i", $spaceID);
-        $updateSpace->execute();
-
-        // Reduce available space
-        $updateZone = $conn->prepare("UPDATE Zone SET availableSpace = availableSpace - 1 WHERE zoneID = ?");
-        $updateZone->bind_param("i", $zone["zoneID"]);
-        $updateZone->execute();
-
-        // Insert session
-        $insertSession = $conn->prepare("INSERT INTO Session (userID, role, spaceID) VALUES (?, ?, ?)");
-        $insertSession->bind_param("isi", $userID, $role, $spaceID);
-        $insertSession->execute();
-
-        header("Location: visitor_dashboard.php");
-        exit();
+    if (!$zone) {
+        throw new Exception("No zone assigned to this role.");
     }
-}
 
-// Handle check-out
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkout_space_id"]) && $activeSession) {
-    $spaceID = intval($_POST["checkout_space_id"]);
+    // Check for active session
+    $activeStmt = $conn->prepare("SELECT * FROM Session WHERE userID = ? AND role = ? AND checkoutTime IS NULL");
+    if (!$activeStmt) throw new Exception("Prepare failed: " . $conn->error);
+    $activeStmt->bind_param("is", $userID, $role);
+    $activeStmt->execute();
+    $activeSession = $activeStmt->get_result()->fetch_assoc();
 
-    if ($spaceID === intval($activeSession["spaceID"])) {
-        // Free the space
-        $freeSpace = $conn->prepare("UPDATE ParkingSpace SET status = 'available' WHERE spaceID = ?");
-        $freeSpace->bind_param("i", $spaceID);
-        $freeSpace->execute();
+    // Handle check-in
+    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) {
+        if ($activeSession) {
+            $error = "You are already checked in. Please check out first.";
+        } else {
+            $spaceID = intval($_POST["checkin_space_id"]);
+            $conn->begin_transaction();
 
-        // Increase available space
-        $updateZone = $conn->prepare("UPDATE Zone SET availableSpace = availableSpace + 1 WHERE zoneID = ?");
-        $updateZone->bind_param("i", $zone["zoneID"]);
-        $updateZone->execute();
+            $updateSpace = $conn->prepare("UPDATE ParkingSpace SET status = 'occupied' WHERE spaceID = ?");
+            if (!$updateSpace) throw new Exception("Prepare failed: " . $conn->error);
+            $updateSpace->bind_param("i", $spaceID);
+            $updateSpace->execute();
 
-        // Update session checkout time
-        $endSession = $conn->prepare("UPDATE Session SET checkoutTime = NOW() WHERE sessionID = ?");
-        $endSession->bind_param("i", $activeSession["sessionID"]);
-        $endSession->execute();
+            $updateZone = $conn->prepare("UPDATE Zone SET availableSpace = availableSpace - 1 WHERE zoneID = ?");
+            if (!$updateZone) throw new Exception("Prepare failed: " . $conn->error);
+            $updateZone->bind_param("i", $zone["zoneID"]);
+            $updateZone->execute();
 
-        header("Location: visitor_dashboard.php");
-        exit();
+            $insertSession = $conn->prepare("INSERT INTO Session (userID, role, spaceID) VALUES (?, ?, ?)");
+            if (!$insertSession) throw new Exception("Prepare failed: " . $conn->error);
+            $insertSession->bind_param("isi", $userID, $role, $spaceID);
+            $insertSession->execute();
+
+            $conn->commit();
+            header("Location: visitor_dashboard.php");
+            exit();
+        }
     }
-}
 
-// Fetch all parking spaces for the zone
-$spaceStmt = $conn->prepare("SELECT * FROM ParkingSpace WHERE zoneID = ?");
-$spaceStmt->bind_param("i", $zone["zoneID"]);
-$spaceStmt->execute();
-$spaces = $spaceStmt->get_result();
+    // Handle check-out
+    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkout_space_id"]) && $activeSession) {
+        $spaceID = intval($_POST["checkout_space_id"]);
+
+        if ($spaceID === intval($activeSession["spaceID"])) {
+            $conn->begin_transaction();
+
+            $freeSpace = $conn->prepare("UPDATE ParkingSpace SET status = 'available' WHERE spaceID = ?");
+            if (!$freeSpace) throw new Exception("Prepare failed: " . $conn->error);
+            $freeSpace->bind_param("i", $spaceID);
+            $freeSpace->execute();
+
+            $updateZone = $conn->prepare("UPDATE Zone SET availableSpace = availableSpace + 1 WHERE zoneID = ?");
+            if (!$updateZone) throw new Exception("Prepare failed: " . $conn->error);
+            $updateZone->bind_param("i", $zone["zoneID"]);
+            $updateZone->execute();
+
+            $endSession = $conn->prepare("UPDATE Session SET checkoutTime = NOW() WHERE sessionID = ?");
+            if (!$endSession) throw new Exception("Prepare failed: " . $conn->error);
+            $endSession->bind_param("i", $activeSession["sessionID"]);
+            $endSession->execute();
+
+            $conn->commit();
+            header("Location: visitor_dashboard.php");
+            exit();
+        }
+    }
+
+    // Fetch all parking spaces for the zone
+    $spaceStmt = $conn->prepare("SELECT * FROM ParkingSpace WHERE zoneID = ?");
+    if (!$spaceStmt) throw new Exception("Prepare failed: " . $conn->error);
+    $spaceStmt->bind_param("i", $zone["zoneID"]);
+    $spaceStmt->execute();
+    $spaces = $spaceStmt->get_result();
+
+} catch (Exception $e) {
+    $conn->rollback();
+    $error = "Error: " . $e->getMessage();
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <a href="logout.php" class="btn danger" style="float:right;">Logout</a>
     <title>Visitor Dashboard</title>
     <link rel="stylesheet" href="css/availability.css">
 </head>
 <body>
 
+<a href="logout.php" class="btn danger" style="float:right;">Logout</a>
+
 <div class="dashboard-container">
     <h2>Welcome, Visitor</h2>
-
-    <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $zone["availableSpace"] ?> / <?= $zone["capacity"] ?></h3>
+    <h3><?= htmlspecialchars($zone["zoneName"] ?? "") ?> — Available: <?= htmlspecialchars($zone["availableSpace"] ?? 0) ?> / <?= htmlspecialchars($zone["capacity"] ?? 0) ?></h3>
 
     <?php if (!empty($error)): ?>
         <div class="error-message" style="color: red; text-align: center; font-weight: bold;">

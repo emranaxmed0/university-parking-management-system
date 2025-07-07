@@ -5,41 +5,61 @@ $error = "";
 $zone = null;
 $zoneID = isset($_GET["id"]) ? intval($_GET["id"]) : 0;
 
-if ($zoneID > 0) {
-    // Fetch zone data
-    $stmt = $conn->prepare("SELECT zoneName, capacity, role FROM Zone WHERE zoneID = ?");
-    $stmt->bind_param("i", $zoneID);
-    $stmt->execute();
-    $result = $stmt->get_result();
+try {
+    if ($zoneID > 0) {
+        // ✅ Fetch zone data with error handling
+        $stmt = $conn->prepare("SELECT zoneName, capacity, role FROM Zone WHERE zoneID = ?");
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error); // 🔐 Error handling
+        }
 
-    if ($result->num_rows === 0) {
-        $error = "Zone not found.";
-    } else {
-        $zone = $result->fetch_assoc();
+        $stmt->bind_param("i", $zoneID);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        // Process form if submitted
-        if ($_SERVER["REQUEST_METHOD"] === "POST") {
-            $zoneName = trim($_POST["zoneName"]);
-            $capacity = intval($_POST["capacity"]);
-            $role = $_POST["role"];
+        if ($result->num_rows === 0) {
+            $error = "Zone not found.";
+        } else {
+            $zone = $result->fetch_assoc();
 
-            if (!empty($zoneName) && $capacity >= 0 && in_array($role, ['student', 'staff', 'visitor'])) {
-                $updateStmt = $conn->prepare("UPDATE Zone SET zoneName = ?, capacity = ?, role = ? WHERE zoneID = ?");
-                $updateStmt->bind_param("sisi", $zoneName, $capacity, $role, $zoneID);
+            //  Process form if submitted
+            if ($_SERVER["REQUEST_METHOD"] === "POST") {
+                $zoneName = trim($_POST["zoneName"]);
+                $capacity = intval($_POST["capacity"]);
+                $role = $_POST["role"];
 
-                if ($updateStmt->execute()) {
-                    header("Location: admin-logs.php");
-                    exit();
+                if (!empty($zoneName) && $capacity >= 0 && in_array($role, ['student', 'staff', 'visitor'])) {
+
+                    //  Begin transaction for concurrency control
+                    $conn->begin_transaction();
+
+                    $updateStmt = $conn->prepare("UPDATE Zone SET zoneName = ?, capacity = ?, role = ? WHERE zoneID = ?");
+                    if (!$updateStmt) {
+                        throw new Exception("Prepare failed: " . $conn->error); //  Error handling
+                    }
+
+                    $updateStmt->bind_param("sisi", $zoneName, $capacity, $role, $zoneID);
+
+                    if ($updateStmt->execute()) {
+                        $conn->commit(); // 🔄 Commit the transaction if successful
+                        header("Location: admin-logs.php");
+                        exit();
+                    } else {
+                        $conn->rollback(); // 🔄 Roll back on failure
+                        $error = "Failed to update zone: " . $updateStmt->error;
+                    }
                 } else {
-                    $error = "Failed to update zone: " . $conn->error;
+                    $error = "Please fill all fields correctly.";
                 }
-            } else {
-                $error = "Please fill all fields correctly.";
             }
         }
     }
+} catch (Exception $e) {
+    $conn->rollback(); // Rollback if any uncaught error happens
+    $error = "An error occurred: " . $e->getMessage(); // 🔐 Catch general DB/logic errors
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

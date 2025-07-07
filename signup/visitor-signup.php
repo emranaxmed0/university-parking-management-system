@@ -1,20 +1,34 @@
 <?php
 require_once "../includes/db_connect.php";
 
+$error = "";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST["username"];
     $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
     $email = $_POST["email"];
 
-    $stmt = $conn->prepare("INSERT INTO Visitor (username, email, password) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $username, $email, $password);
+    try {
+        $conn->begin_transaction();
 
+        $stmt = $conn->prepare("INSERT INTO Visitor (username, email, password) VALUES (?, ?, ?)");
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
 
-    if ($stmt->execute()) {
+        $stmt->bind_param("sss", $username, $email, $password);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Execution failed: " . $stmt->error);
+        }
+
+        $conn->commit();
         header("Location: ../login/visitor-login.php");
         exit();
-    } else {
-        $error = "Signup failed. Try a different username.";
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log($e->getMessage());
+        $error = "Signup failed. Please try a different username or try again later.";
     }
 }
 ?>
@@ -26,6 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <input type="email" name="email" placeholder="Email" required><br>
     <input type="password" name="password" placeholder="Password" required><br>
     <button type="submit">Sign Up</button>
-    <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
+    <?php if (isset($error)) echo "<p class='error'>" . htmlspecialchars($error) . "</p>"; ?>
     <p>Already have an account? <a href="../login/visitor-login.php">Login here</a></p>
 </form>
