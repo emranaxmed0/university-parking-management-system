@@ -2,26 +2,46 @@
 session_start();
 require_once "../includes/db_connect.php";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST["username"];
-    $password = $_POST["password"];
+// Error Handling Setup
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    error_log("Error [$errno] $errstr in $errfile on line $errline", 0);
+});
 
-    $query = "SELECT * FROM Staff WHERE username = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
+try {
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $username = $_POST["username"];
+        $password = $_POST["password"];
 
-    if ($user = $result->fetch_assoc()) {
-        if (password_verify($password, $user["password"])) {
-            $_SESSION["user_id"] = $user["staffID"];
-            $_SESSION["role"] = "staff";
-            header("Location: ../staff_dashboard.php");
-            exit();
+        // Begin Transaction for Read Consistency (optional here)
+        $conn->begin_transaction();
+
+        $query = "SELECT * FROM Staff WHERE username = ?";
+        $stmt = $conn->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
         }
-    }
 
-    $error = "Invalid username or password.";
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($user = $result->fetch_assoc()) {
+            if (password_verify($password, $user["password"])) {
+                $conn->commit(); // Commit if user found and password correct
+                $_SESSION["user_id"] = $user["staffID"];
+                $_SESSION["role"] = "staff";
+                header("Location: ../staff_dashboard.php");
+                exit();
+            }
+        }
+
+        $conn->rollback(); // Rollback if login fails
+        $error = "Invalid username or password.";
+    }
+} catch (Throwable $e) {
+    error_log("Exception: " . $e->getMessage(), 0);
+    $conn->rollback(); // Rollback on any exception
+    $error = "An unexpected error occurred. Please try again later.";
 }
 ?>
 <!DOCTYPE html>
@@ -44,3 +64,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </body>
 </html>
+

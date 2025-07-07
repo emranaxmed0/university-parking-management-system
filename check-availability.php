@@ -1,22 +1,35 @@
 <?php
 session_start();
 
+// Error Handling Setup
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    error_log("Error [$errno] $errstr in $errfile on line $errline", 0);
+    // You can redirect to a custom error page if desired
+});
 
-if (isset($_SESSION["user_id"]) && isset($_SESSION["role"])) {
-    switch ($_SESSION["role"]) {
-        case 'student':
-            header("Location: student_dashboard.php");
-            exit();
-        case 'staff':
-            header("Location: staff_dashboard.php");
-            exit();
-        case 'visitor':
-            header("Location: visitor_dashboard.php");
-            exit();
-        default:
-            header("Location: logout.php");
-            exit();
+try {
+    if (isset($_SESSION["user_id"]) && isset($_SESSION["role"])) {
+        switch ($_SESSION["role"]) {
+            case 'student':
+                header("Location: student_dashboard.php");
+                exit();
+            case 'staff':
+                header("Location: staff_dashboard.php");
+                exit();
+            case 'visitor':
+                header("Location: visitor_dashboard.php");
+                exit();
+            default:
+                header("Location: logout.php");
+                exit();
+        }
     }
+
+    // Concurrency control is not applicable here since no DB write operations are happening.
+} catch (Throwable $e) {
+    error_log("Exception caught: " . $e->getMessage(), 0);
+    header("Location: error.php"); // Optional: a friendly error page
+    exit();
 }
 ?>
 
