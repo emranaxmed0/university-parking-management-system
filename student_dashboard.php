@@ -135,6 +135,8 @@ $spaces = $spaceStmt->get_result();
       <section class="dashboard-section">
         <h2>User Feedback</h2>
         <a href="feedback.php" class="btn feedback-btn">💬 Feedback</a>
+        <h2>My Parking History</h2>
+        <a href="user_report.php" class="btn">📄 My Parking History</a>
     </section>
 </div>
 
