@@ -1,21 +1,41 @@
 <?php
 require_once "../includes/db_connect.php";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST["username"];
-    $email = $_POST["email"];
-    $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
+// Error Handling Setup
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    error_log("Error [$errno] $errstr in $errfile on line $errline", 0);
+});
 
-    $sql = "INSERT INTO Staff (username, email, password) VALUES (?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sss", $username, $email, $password);
+try {
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $username = $_POST["username"];
+        $email = $_POST["email"];
+        $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
 
-    if ($stmt->execute()) {
-        header("Location: ../login/staff-login.php");
-        exit();
-    } else {
-        $error = "Signup failed. Please try again.";
+        // Begin Transaction for Concurrency Control
+        $conn->begin_transaction();
+
+        $sql = "INSERT INTO Staff (username, email, password) VALUES (?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param("sss", $username, $email, $password);
+
+        if ($stmt->execute()) {
+            $conn->commit(); // Commit transaction
+            header("Location: ../login/staff-login.php");
+            exit();
+        } else {
+            $conn->rollback(); // Rollback on failure
+            $error = "Signup failed. Please try again.";
+        }
     }
+} catch (Throwable $e) {
+    error_log("Exception: " . $e->getMessage(), 0);
+    $conn->rollback(); // Ensure rollback on error
+    $error = "An unexpected error occurred. Please try again later.";
 }
 ?>
 <!DOCTYPE html>

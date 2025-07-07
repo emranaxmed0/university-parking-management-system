@@ -2,11 +2,28 @@
 session_start();
 require_once "includes/db_connect.php";
 
-// Fetch feedback
-$sql = "SELECT * FROM Feedback ORDER BY timestamp DESC";
-$result = $conn->query($sql);
-?>
+// Enable mysqli exceptions and custom error logging
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    error_log("Error [$errno]: $errstr in $errfile on line $errline", 0);
+});
 
+$feedback = [];
+$error = "";
+
+try {
+    $stmt = $conn->prepare("SELECT * FROM Feedback ORDER BY timestamp DESC");
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $feedback[] = $row;
+    }
+} catch (Throwable $e) {
+    $error = "Failed to load feedback. Please try again later.";
+    error_log("Exception in view_feedback.php: " . $e->getMessage(), 0);
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,6 +79,13 @@ $result = $conn->query($sql);
         .back-link:hover {
             text-decoration: underline;
         }
+
+        .error-message {
+            text-align: center;
+            color: red;
+            margin-top: 1rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -69,7 +93,7 @@ $result = $conn->query($sql);
 <div class="feedback-container">
     <h2>User Feedback</h2>
 
-    <?php if ($result && $result->num_rows > 0): ?>
+    <?php if (!empty($feedback)): ?>
         <table>
             <thead>
                 <tr>
@@ -81,7 +105,7 @@ $result = $conn->query($sql);
                 </tr>
             </thead>
             <tbody>
-                <?php while ($row = $result->fetch_assoc()): ?>
+                <?php foreach ($feedback as $row): ?>
                     <tr>
                         <td><?= htmlspecialchars($row['feedbackID']) ?></td>
                         <td><?= htmlspecialchars($row['userID']) ?></td>
@@ -89,9 +113,11 @@ $result = $conn->query($sql);
                         <td><?= htmlspecialchars($row['feedbackText']) ?></td>
                         <td><?= htmlspecialchars($row['timestamp']) ?></td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
+    <?php elseif ($error): ?>
+        <p class="error-message"><?= htmlspecialchars($error) ?></p>
     <?php else: ?>
         <p style="text-align:center;">No feedback found.</p>
     <?php endif; ?>

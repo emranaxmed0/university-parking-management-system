@@ -4,28 +4,47 @@ require_once "includes/db_connect.php";
 $error = "";
 $success = "";
 
-// Fetch all zones and spaces
-$zones = $conn->query("SELECT zoneID, zoneName FROM Zone");
-$spaces = $conn->query("SELECT * FROM ParkingSpace");
+// Error Handling Setup
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    error_log("Error [$errno] $errstr in $errfile on line $errline", 0);
+});
 
-// Handle form submission
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $spaceID = intval($_POST["spaceID"]);
-    $zoneID = intval($_POST["zoneID"]);
-    $status = $_POST["status"];
-    $type = $_POST["type"];
+try {
+    // Fetch all zones and spaces
+    $zones = $conn->query("SELECT zoneID, zoneName FROM Zone");
+    $spaces = $conn->query("SELECT * FROM ParkingSpace");
 
-    if ($spaceID && $zoneID && in_array($status, ['available', 'occupied']) && !empty($type)) {
-        $stmt = $conn->prepare("UPDATE ParkingSpace SET zoneID = ?, status = ?, type = ? WHERE spaceID = ?");
-        $stmt->bind_param("issi", $zoneID, $status, $type, $spaceID);
-        if ($stmt->execute()) {
-            $success = "Parking space updated successfully.";
+    // Handle form submission
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $spaceID = intval($_POST["spaceID"]);
+        $zoneID = intval($_POST["zoneID"]);
+        $status = $_POST["status"];
+        $type = $_POST["type"];
+
+        if ($spaceID && $zoneID && in_array($status, ['available', 'occupied']) && !empty($type)) {
+            $conn->begin_transaction();
+
+            $stmt = $conn->prepare("UPDATE ParkingSpace SET zoneID = ?, status = ?, type = ? WHERE spaceID = ?");
+            if (!$stmt) {
+                throw new Exception("Prepare failed: " . $conn->error);
+            }
+
+            $stmt->bind_param("issi", $zoneID, $status, $type, $spaceID);
+            if ($stmt->execute()) {
+                $conn->commit();
+                $success = "Parking space updated successfully.";
+            } else {
+                $conn->rollback();
+                $error = "Failed to update parking space.";
+            }
         } else {
-            $error = "Failed to update parking space.";
+            $error = "Please fill all fields correctly.";
         }
-    } else {
-        $error = "Please fill all fields correctly.";
     }
+} catch (Throwable $e) {
+    error_log("Exception: " . $e->getMessage(), 0);
+    $conn->rollback();
+    $error = "An unexpected error occurred. Please try again later.";
 }
 ?>
 

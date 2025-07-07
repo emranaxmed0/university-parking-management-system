@@ -1,21 +1,40 @@
 <?php
 require_once "../includes/db_connect.php";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST["username"];
-    $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
-    $email = $_POST["email"];
+// Error Handling Setup
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    error_log("Error [$errno] $errstr in $errfile on line $errline", 0);
+});
 
-    $stmt = $conn->prepare("INSERT INTO Visitor (username, email, password) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $username, $email, $password);
+try {
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $username = $_POST["username"];
+        $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
+        $email = $_POST["email"];
 
+        // Begin Transaction for Concurrency Control
+        $conn->begin_transaction();
 
-    if ($stmt->execute()) {
-        header("Location: ../login/visitor-login.php");
-        exit();
-    } else {
-        $error = "Signup failed. Try a different username.";
+        $stmt = $conn->prepare("INSERT INTO Visitor (username, email, password) VALUES (?, ?, ?)");
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param("sss", $username, $email, $password);
+
+        if ($stmt->execute()) {
+            $conn->commit(); // Commit on success
+            header("Location: ../login/visitor-login.php");
+            exit();
+        } else {
+            $conn->rollback(); // Rollback on failure
+            $error = "Signup failed. Try a different username.";
+        }
     }
+} catch (Throwable $e) {
+    error_log("Exception: " . $e->getMessage(), 0);
+    $conn->rollback(); // Rollback on any caught exception
+    $error = "An unexpected error occurred. Please try again later.";
 }
 ?>
 
