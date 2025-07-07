@@ -99,6 +99,8 @@ $spaces = $conn->query($spaceQuery);
     <section class="admin-section">
         <h2>User Feedback</h2>
         <a href="view_feedback.php" class="btn feedback-btn">💬 View Feedback</a>
+        <h2>Admin Summary Report</h2>
+        <a href="admin_report.php" class="btn">📊 Admin Summary Report</a>
     </section>
 
 </main>

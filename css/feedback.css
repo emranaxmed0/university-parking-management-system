@@ -1,0 +1,77 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: url('../images/background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+}
+
+.feedback-container {
+    max-width: 600px;
+    margin: 100px auto;
+    background-color: rgba(0,0,0,0.8);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(255,127,39,0.2);
+}
+
+.feedback-container h2 {
+    text-align: center;
+    color: #ffa94d;
+    margin-bottom: 1rem;
+}
+
+.feedback-container p {
+    text-align: center;
+    color: #ccc;
+    margin-bottom: 1rem;
+}
+
+textarea {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
+    border: none;
+    resize: vertical;
+    background-color: #1a1a1a;
+    color: white;
+    font-size: 1rem;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #ff7f27;
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    margin-top: 1rem;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e0691e;
+}
+
+.success-message {
+    text-align: center;
+    color: lightgreen;
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    text-align: center;
+    color: red;
+    margin-bottom: 1rem;
+}
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #ffa94d;
+    text-decoration: none;
+}

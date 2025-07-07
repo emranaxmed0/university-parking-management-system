@@ -8,10 +8,58 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
 
 $error = "";
 
+<<<<<<< HEAD
 try {
     // Ensure user is logged in and is a student
     if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "student") {
         header("Location: login.php");
+=======
+// Get zone for student
+$zoneStmt = $conn->prepare("SELECT * FROM Zone WHERE role = ?");
+$zoneStmt->bind_param("s", $role);
+$zoneStmt->execute();
+$zoneResult = $zoneStmt->get_result();
+$zone = $zoneResult->fetch_assoc();
+$availableStmt = $conn->prepare("SELECT COUNT(*) AS availableCount FROM ParkingSpace WHERE zoneID = ? AND status = 'available'");
+$availableStmt->bind_param("i", $zone["zoneID"]);
+$availableStmt->execute();
+$availableResult = $availableStmt->get_result();
+$availableCount = $availableResult->fetch_assoc()["availableCount"];
+
+if (!$zone) {
+    die("No zone assigned to this role.");
+}
+
+// Check for active session
+$activeStmt = $conn->prepare("SELECT * FROM Session WHERE userID = ? AND role = ? AND checkoutTime IS NULL");
+$activeStmt->bind_param("is", $userID, $role);
+$activeStmt->execute();
+$activeSession = $activeStmt->get_result()->fetch_assoc();
+
+// Handle check-in
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) {
+    if ($activeSession) {
+        $error = "You are already checked in. Please check out first.";
+    } else {
+        $spaceID = intval($_POST["checkin_space_id"]);
+
+        // Mark the space as occupied
+        $updateSpace = $conn->prepare("UPDATE ParkingSpace SET status = 'occupied' WHERE spaceID = ?");
+        $updateSpace->bind_param("i", $spaceID);
+        $updateSpace->execute();
+
+        // Reduce available space
+        $updateZone = $conn->prepare("UPDATE Zone SET availableSpace = availableSpace - 1 WHERE zoneID = ?");
+        $updateZone->bind_param("i", $zone["zoneID"]);
+        $updateZone->execute();
+
+        // Insert session
+        $insertSession = $conn->prepare("INSERT INTO Session (userID, role, spaceID) VALUES (?, ?, ?)");
+        $insertSession->bind_param("isi", $userID, $role, $spaceID);
+        $insertSession->execute();
+
+        header("Location: student_dashboard.php");
+>>>>>>> 92a319030657ec71fc7ea50ee414e9cc5585a532
         exit();
     }
 
@@ -113,7 +161,7 @@ try {
 <div class="dashboard-container">
     <h2>Welcome, Student</h2>
 
-    <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $zone["availableSpace"] ?> / <?= $zone["capacity"] ?></h3>
+   <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $availableCount ?> / <?= $zone["capacity"] ?></h3>
 
     <?php if (!empty($error)): ?>
         <div class="error-message" style="color: red; text-align: center; font-weight: bold;">
@@ -144,6 +192,12 @@ try {
             </div>
         <?php endwhile; ?>
     </div>
+      <section class="dashboard-section">
+        <h2>User Feedback</h2>
+        <a href="feedback.php" class="btn feedback-btn">💬 Feedback</a>
+        <h2>My Parking History</h2>
+        <a href="user_report.php" class="btn">📄 My Parking History</a>
+    </section>
 </div>
 
 </body>
