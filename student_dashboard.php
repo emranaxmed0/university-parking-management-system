@@ -8,62 +8,17 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
 
 $error = "";
 
-try {
-    // Ensure user is logged in and is a student
-    if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "student") {
-        header("Location: login.php");
-// Get zone for student
-$zoneStmt = $conn->prepare("SELECT * FROM Zone WHERE role = ?");
-$zoneStmt->bind_param("s", $role);
-$zoneStmt->execute();
-$zoneResult = $zoneStmt->get_result();
-$zone = $zoneResult->fetch_assoc();
-$availableStmt = $conn->prepare("SELECT COUNT(*) AS availableCount FROM ParkingSpace WHERE zoneID = ? AND status = 'available'");
-$availableStmt->bind_param("i", $zone["zoneID"]);
-$availableStmt->execute();
-$availableResult = $availableStmt->get_result();
-$availableCount = $availableResult->fetch_assoc()["availableCount"];
-
-if (!$zone) {
-    die("No zone assigned to this role.");
+// Ensure user is logged in and is a student
+if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "student") {
+    header("Location: login.php");
+    exit();
 }
 
-// Check for active session
-$activeStmt = $conn->prepare("SELECT * FROM Session WHERE userID = ? AND role = ? AND checkoutTime IS NULL");
-$activeStmt->bind_param("is", $userID, $role);
-$activeStmt->execute();
-$activeSession = $activeStmt->get_result()->fetch_assoc();
+$userID = $_SESSION["user_id"];
+$role = $_SESSION["role"];
 
-// Handle check-in
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) {
-    if ($activeSession) {
-        $error = "You are already checked in. Please check out first.";
-    } else {
-        $spaceID = intval($_POST["checkin_space_id"]);
-
-        // Mark the space as occupied
-        $updateSpace = $conn->prepare("UPDATE ParkingSpace SET status = 'occupied' WHERE spaceID = ?");
-        $updateSpace->bind_param("i", $spaceID);
-        $updateSpace->execute();
-
-        // Reduce available space
-        $updateZone = $conn->prepare("UPDATE Zone SET availableSpace = availableSpace - 1 WHERE zoneID = ?");
-        $updateZone->bind_param("i", $zone["zoneID"]);
-        $updateZone->execute();
-
-        // Insert session
-        $insertSession = $conn->prepare("INSERT INTO Session (userID, role, spaceID) VALUES (?, ?, ?)");
-        $insertSession->bind_param("isi", $userID, $role, $spaceID);
-        $insertSession->execute();
-
-        header("Location: student_dashboard.php");
-        exit();
-    }
-
-    $userID = $_SESSION["user_id"];
-    $role = $_SESSION["role"];
-
-    // Get zone for student
+try {
+    // Get the zone assigned to students
     $zoneStmt = $conn->prepare("SELECT * FROM Zone WHERE role = ?");
     $zoneStmt->bind_param("s", $role);
     $zoneStmt->execute();
@@ -73,6 +28,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) 
     if (!$zone) {
         die("No zone assigned to this role.");
     }
+
+    // Get real-time count of available spaces
+    $availableStmt = $conn->prepare("SELECT COUNT(*) AS availableCount FROM ParkingSpace WHERE zoneID = ? AND status = 'available'");
+    $availableStmt->bind_param("i", $zone["zoneID"]);
+    $availableStmt->execute();
+    $availableResult = $availableStmt->get_result();
+    $availableCount = $availableResult->fetch_assoc()["availableCount"];
 
     // Check for active session
     $activeStmt = $conn->prepare("SELECT * FROM Session WHERE userID = ? AND role = ? AND checkoutTime IS NULL");
@@ -132,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) 
         }
     }
 
-    // Fetch all parking spaces for the zone
+    // Get all spaces in this zone
     $spaceStmt = $conn->prepare("SELECT * FROM ParkingSpace WHERE zoneID = ?");
     $spaceStmt->bind_param("i", $zone["zoneID"]);
     $spaceStmt->execute();
@@ -149,16 +111,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <a href="logout.php" class="btn danger" style="float:right;">Logout</a>
     <title>Student Dashboard</title>
     <link rel="stylesheet" href="css/availability.css">
 </head>
 <body>
 
+<a href="logout.php" class="btn danger" style="float:right; margin: 1rem;">Logout</a>
+
 <div class="dashboard-container">
     <h2>Welcome, Student</h2>
-
-   <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $availableCount ?> / <?= $zone["capacity"] ?></h3>
+    <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $availableCount ?> / <?= $zone["capacity"] ?></h3>
 
     <?php if (!empty($error)): ?>
         <div class="error-message" style="color: red; text-align: center; font-weight: bold;">
@@ -189,9 +151,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) 
             </div>
         <?php endwhile; ?>
     </div>
-      <section class="dashboard-section">
+
+    <section class="dashboard-section">
         <h2>User Feedback</h2>
         <a href="feedback.php" class="btn feedback-btn">💬 Feedback</a>
+
         <h2>My Parking History</h2>
         <a href="user_report.php" class="btn">📄 My Parking History</a>
     </section>
