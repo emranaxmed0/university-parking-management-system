@@ -8,12 +8,10 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
 
 $error = "";
 
-<<<<<<< HEAD
 try {
     // Ensure user is logged in and is a student
     if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "student") {
         header("Location: login.php");
-=======
 // Get zone for student
 $zoneStmt = $conn->prepare("SELECT * FROM Zone WHERE role = ?");
 $zoneStmt->bind_param("s", $role);
@@ -59,7 +57,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) 
         $insertSession->execute();
 
         header("Location: student_dashboard.php");
->>>>>>> 92a319030657ec71fc7ea50ee414e9cc5585a532
         exit();
     }
 
