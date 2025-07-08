@@ -23,7 +23,7 @@
             <h2 class="hero-heading">Smart Parking Solutions for Campus</h2>
             <p class="hero-text">Efficiently manage your university parking with our comprehensive system. Find available spots and streamline campus mobility.</p>
            <div class="button-group">
-    <a href="/check-availability.php" class="primary-button">Check Parking Availability</a>
+    <a href="check-availability.php" class="primary-button">Check Parking Availability</a>
     <div class="dropdown">
     <a class="secondary-button dropdown-toggle" href="#">Get Started Today ▾</a>
          <div class="dropdown-content">
