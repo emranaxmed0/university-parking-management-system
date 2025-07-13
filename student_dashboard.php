@@ -2,23 +2,25 @@
 session_start();
 require_once "includes/db_connect.php";
 
+// Error logging
 set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     error_log("Error [$errno] $errstr in $errfile on line $errline", 0);
 });
 
 $error = "";
 
-// Ensure user is logged in and is a student
+// ✅ Verify login and role
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "student") {
     header("Location: login/student-login.php");
     exit();
 }
 
-$studentID = $_SESSION["student_id"];
+// ✅ Get session details
+$studentID = $_SESSION["user_id"];  // FIX: Should be user_id not student_id
 $role = $_SESSION["role"];
 
 try {
-    // Get the zone assigned to students
+    // ✅ Get assigned zone
     $zoneStmt = $conn->prepare("SELECT * FROM Zone WHERE role = ?");
     $zoneStmt->bind_param("s", $role);
     $zoneStmt->execute();
@@ -29,20 +31,20 @@ try {
         die("No zone assigned to this role.");
     }
 
-    // Get real-time count of available spaces
+    // ✅ Get real-time available space count
     $availableStmt = $conn->prepare("SELECT COUNT(*) AS availableCount FROM ParkingSpace WHERE zoneID = ? AND status = 'available'");
     $availableStmt->bind_param("i", $zone["zoneID"]);
     $availableStmt->execute();
     $availableResult = $availableStmt->get_result();
     $availableCount = $availableResult->fetch_assoc()["availableCount"];
 
-    // Check for active session
-    $activeStmt = $conn->prepare("SELECT * FROM Session WHERE studentID = ? AND role = ? AND checkoutTime IS NULL");
+    // ✅ Check if student is already checked in
+    $activeStmt = $conn->prepare("SELECT * FROM Session WHERE userID = ? AND role = ? AND checkoutTime IS NULL");
     $activeStmt->bind_param("is", $studentID, $role);
     $activeStmt->execute();
     $activeSession = $activeStmt->get_result()->fetch_assoc();
 
-    // Handle check-in
+    // ✅ Handle Check-in
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) {
         if ($activeSession) {
             $error = "You are already checked in. Please check out first.";
@@ -59,7 +61,7 @@ try {
             $updateZone->bind_param("i", $zone["zoneID"]);
             $updateZone->execute();
 
-            $insertSession = $conn->prepare("INSERT INTO Session (studentID, role, spaceID) VALUES (?, ?, ?)");
+            $insertSession = $conn->prepare("INSERT INTO Session (userID, role, spaceID) VALUES (?, ?, ?)");
             $insertSession->bind_param("isi", $studentID, $role, $spaceID);
             $insertSession->execute();
 
@@ -69,7 +71,7 @@ try {
         }
     }
 
-    // Handle check-out
+    // ✅ Handle Check-out
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkout_space_id"]) && $activeSession) {
         $spaceID = intval($_POST["checkout_space_id"]);
 
@@ -94,7 +96,7 @@ try {
         }
     }
 
-    // Get all spaces in this zone
+    // ✅ Fetch spaces
     $spaceStmt = $conn->prepare("SELECT * FROM ParkingSpace WHERE zoneID = ?");
     $spaceStmt->bind_param("i", $zone["zoneID"]);
     $spaceStmt->execute();
@@ -120,7 +122,7 @@ try {
 
 <div class="dashboard-container">
     <h2>Welcome, Student</h2>
-    <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $availableCount ?> / <?= $zone["capacity"] ?></h3>
+        <h3><?= htmlspecialchars($zone["zoneName"]) ?> — Available: <?= $availableCount ?> / <?= $zone["capacity"] ?></h3>
 
     <?php if (!empty($error)): ?>
         <div class="error-message" style="color: red; text-align: center; font-weight: bold;">
@@ -153,13 +155,14 @@ try {
     </div>
 
     <section class="dashboard-section">
-        <h2>User Feedback</h2>
-        <a href="feedback.php" class="btn feedback-btn">💬 Feedback</a>
+        <h2>Feedback</h2>
+        <a href="feedback.php" class="btn feedback-btn">💬 Give Feedback</a>
 
-        <h2>My Parking History</h2>
-        <a href="user_report.php" class="btn">📄 My Parking History</a>
+        <h2>Parking History</h2>
+        <a href="user_report.php" class="btn">📄 View My Parking Report</a>
     </section>
 </div>
 
 </body>
 </html>
+
