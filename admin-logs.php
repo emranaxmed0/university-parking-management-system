@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_zone_id"])) {
     $stmt = $conn->prepare("DELETE FROM Zone WHERE zoneID = ?");
     $stmt->bind_param("i", $zoneId);
     $stmt->execute();
-    header("Location: admin.php");
+    header("Location: admin-logs.php");
     exit();
 }
 
@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_space_id"])) {
     $stmt = $conn->prepare("DELETE FROM ParkingSpace WHERE spaceID = ?");
     $stmt->bind_param("i", $spaceId);
     $stmt->execute();
-    header("Location: admin.php");
+    header("Location: admin-logs.php");
     exit();
 }
 
@@ -101,6 +101,7 @@ $spaces = $conn->query($spaceQuery);
         <a href="view_feedback.php" class="btn feedback-btn">💬 View Feedback</a>
         <h2>Admin Summary Report</h2>
         <a href="admin_report.php" class="btn">📊 Admin Summary Report</a>
+        <a href="logs_report.php" class="btn"> User Check-In Logs</a>
     </section>
 
 </main>
