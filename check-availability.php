@@ -1,3 +1,4 @@
+<?php include 'templates/nav.php'; ?>
 <?php
 session_start();
 
