@@ -10,11 +10,11 @@ $error = "";
 
 // Ensure user is logged in and is a student
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "student") {
-    header("Location: login.php");
+    header("Location: login/student-login.php");
     exit();
 }
 
-$userID = $_SESSION["user_id"];
+$studentID = $_SESSION["student_id"];
 $role = $_SESSION["role"];
 
 try {
@@ -37,8 +37,8 @@ try {
     $availableCount = $availableResult->fetch_assoc()["availableCount"];
 
     // Check for active session
-    $activeStmt = $conn->prepare("SELECT * FROM Session WHERE userID = ? AND role = ? AND checkoutTime IS NULL");
-    $activeStmt->bind_param("is", $userID, $role);
+    $activeStmt = $conn->prepare("SELECT * FROM Session WHERE studentID = ? AND role = ? AND checkoutTime IS NULL");
+    $activeStmt->bind_param("is", $studentID, $role);
     $activeStmt->execute();
     $activeSession = $activeStmt->get_result()->fetch_assoc();
 
@@ -59,8 +59,8 @@ try {
             $updateZone->bind_param("i", $zone["zoneID"]);
             $updateZone->execute();
 
-            $insertSession = $conn->prepare("INSERT INTO Session (userID, role, spaceID) VALUES (?, ?, ?)");
-            $insertSession->bind_param("isi", $userID, $role, $spaceID);
+            $insertSession = $conn->prepare("INSERT INTO Session (studentID, role, spaceID) VALUES (?, ?, ?)");
+            $insertSession->bind_param("isi", $studentID, $role, $spaceID);
             $insertSession->execute();
 
             $conn->commit();
