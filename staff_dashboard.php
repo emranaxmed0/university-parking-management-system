@@ -103,7 +103,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <a href="logout.php" class="btn danger" style="float:right;">Logout</a>
-    <title>Student Dashboard</title>
+    <title>Staff Dashboard</title>
     <link rel="stylesheet" href="css/availability.css">
 </head>
 <body>
