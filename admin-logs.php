@@ -2,6 +2,13 @@
 session_start();
 require_once "includes/db_connect.php";
 
+
+// Redirect if not logged in as admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login/admin-login.php");
+    exit();
+}
+
 // Handle delete zone
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_zone_id"])) {
     $zoneId = intval($_POST["delete_zone_id"]);
@@ -41,6 +48,8 @@ $spaces = $conn->query($spaceQuery);
     <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
+    
+<a href="logout.php" class="btn danger" style="float:right; margin: 1rem;">Logout</a>
 
 <header class="admin-header">
     <?php include 'templates/nav.php'; ?>
