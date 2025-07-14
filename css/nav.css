@@ -10,7 +10,7 @@ nav {
     left: 0;
     width: 100%;
     z-index: 1000;
-    flex-wrap: wrap; /* Allows items to wrap if needed on small screens */
+    flex-wrap: wrap; 
     box-sizing: border-box;
 }
 
@@ -18,8 +18,7 @@ nav {
 .topnav-right {
     display: flex;
     gap: 0.75rem;
-    flex-wrap: wrap; /* Prevents overflow on narrow screens */
-}
+    flex-wrap: wrap; }
 
 nav a {
     color: white;
@@ -31,26 +30,26 @@ nav a {
     font-size: 0.95rem;
 }
 
-/* Hover effect */
+
 nav a:hover {
     background-color: #ff7f27;
     color: #000;
 }
 
-/* Sign up button */
+
 .signup-btn {
     background-color: #ff7f27;
     color: #000;
     font-weight: bold;
 }
-/* Dropdown container */
+
 .dropdown {
     position: relative;
     display: inline-block;
     margin-left: 10px;
 }
 
-/* Dropdown button */
+
 .dropdown > a {
     color: white;
     text-decoration: none;
@@ -59,7 +58,7 @@ nav a:hover {
     border-radius: 4px;
 }
 
-/* Dropdown content */
+
 .dropdown-content {
     display: none;
     position: absolute;
@@ -92,7 +91,7 @@ nav a:hover {
     .dropdown-content {
         position: fixed;
         right: 10px;
-        top: 60px; /* Adjust if nav height is different */
+        top: 60px; 
         width: 90%;
         left: auto;
     }

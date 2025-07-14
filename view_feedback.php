@@ -30,63 +30,7 @@ try {
     <meta charset="UTF-8">
     <title>View Feedback</title>
     <link rel="stylesheet" href="css/admin.css">
-    <style>
-        .feedback-container {
-            max-width: 1000px;
-            margin: 100px auto;
-            background: #1a1a1a;
-            padding: 2rem;
-            border-radius: 10px;
-            color: white;
-            box-shadow: 0 0 20px rgba(255, 127, 39, 0.3);
-        }
-
-        .feedback-container h2 {
-            text-align: center;
-            color: #ff7f27;
-            margin-bottom: 1.5rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #222;
-        }
-
-        th, td {
-            padding: 12px;
-            border: 1px solid #444;
-            text-align: left;
-        }
-
-        th {
-            background-color: #333;
-            color: #ff7f27;
-        }
-
-        tr:nth-child(even) {
-            background-color: #2c2c2c;
-        }
-
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 2rem;
-            color: #ff7f27;
-            text-decoration: none;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .error-message {
-            text-align: center;
-            color: red;
-            margin-top: 1rem;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="css/feedback.css">
 </head>
 <body>
 

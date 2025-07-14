@@ -9,18 +9,18 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
 
 $error = "";
 
-// ✅ Verify login and role
+//  Verify login and role
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "student") {
     header("Location: login/student-login.php");
     exit();
 }
 
-// ✅ Get session details
-$studentID = $_SESSION["user_id"];  // FIX: Should be user_id not student_id
+//  Get session details
+$studentID = $_SESSION["user_id"];  
 $role = $_SESSION["role"];
 
 try {
-    // ✅ Get assigned zone
+    //  Get assigned zone
     $zoneStmt = $conn->prepare("SELECT * FROM Zone WHERE role = ?");
     $zoneStmt->bind_param("s", $role);
     $zoneStmt->execute();
@@ -31,20 +31,20 @@ try {
         die("No zone assigned to this role.");
     }
 
-    // ✅ Get real-time available space count
+    //  Get real-time available space count
     $availableStmt = $conn->prepare("SELECT COUNT(*) AS availableCount FROM ParkingSpace WHERE zoneID = ? AND status = 'available'");
     $availableStmt->bind_param("i", $zone["zoneID"]);
     $availableStmt->execute();
     $availableResult = $availableStmt->get_result();
     $availableCount = $availableResult->fetch_assoc()["availableCount"];
 
-    // ✅ Check if student is already checked in
+    //  Check if student is already checked in
     $activeStmt = $conn->prepare("SELECT * FROM Session WHERE userID = ? AND role = ? AND checkoutTime IS NULL");
     $activeStmt->bind_param("is", $studentID, $role);
     $activeStmt->execute();
     $activeSession = $activeStmt->get_result()->fetch_assoc();
 
-    // ✅ Handle Check-in
+    //  Handle Check-in
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkin_space_id"])) {
         if ($activeSession) {
             $error = "You are already checked in. Please check out first.";
@@ -71,7 +71,7 @@ try {
         }
     }
 
-    // ✅ Handle Check-out
+    //  Handle Check-out
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["checkout_space_id"]) && $activeSession) {
         $spaceID = intval($_POST["checkout_space_id"]);
 
@@ -96,7 +96,7 @@ try {
         }
     }
 
-    // ✅ Fetch spaces
+    //  Fetch spaces
     $spaceStmt = $conn->prepare("SELECT * FROM ParkingSpace WHERE zoneID = ?");
     $spaceStmt->bind_param("i", $zone["zoneID"]);
     $spaceStmt->execute();
