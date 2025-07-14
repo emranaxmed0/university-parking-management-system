@@ -12,7 +12,7 @@ try {
         $username = $_POST["username"];
         $password = $_POST["password"];
 
-        // Optional: Transaction for read consistency
+        //  Transaction for read consistency
         $conn->begin_transaction();
 
         $query = "SELECT * FROM Student WHERE username = ?";

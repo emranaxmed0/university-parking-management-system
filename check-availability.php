@@ -5,7 +5,6 @@ session_start();
 // Error Handling Setup
 set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     error_log("Error [$errno] $errstr in $errfile on line $errline", 0);
-    // You can redirect to a custom error page if desired
 });
 
 try {
@@ -26,10 +25,10 @@ try {
         }
     }
 
-    // Concurrency control is not applicable here since no DB write operations are happening.
+
 } catch (Throwable $e) {
     error_log("Exception caught: " . $e->getMessage(), 0);
-    header("Location: error.php"); // Optional: a friendly error page
+    header("Location: error.php"); 
     exit();
 }
 ?>

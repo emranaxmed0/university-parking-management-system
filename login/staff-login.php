@@ -12,7 +12,7 @@ try {
         $username = $_POST["username"];
         $password = $_POST["password"];
 
-        // Begin Transaction for Read Consistency (optional here)
+        // Begin Transaction for Read Consistency 
         $conn->begin_transaction();
 
         $query = "SELECT * FROM Staff WHERE username = ?";
